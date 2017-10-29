@@ -6,7 +6,10 @@
 	game.states.preload = {
 		preload: function(){
 			game.load.image('loading', './assets/images/preloader.gif');
-			game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
+			if (!game.device.desktop) {
+				game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
+			}
+
 		}, 
 		create: function(){
 			game.state.start('load');
@@ -43,9 +46,9 @@
 			game.load.audio('ao', './assets/images/ao.mp3');
 			game.load.audio('pi', './assets/images/pi.mp3');
 			game.load.audio('deng', './assets/images/deng.mp3');	
-			game.load.onFileComplete.add(function(){
-				console.log(arguments);
-			});
+			// game.load.onFileComplete.add(function(){
+			// 	console.log(arguments);
+			// });
 		}, 
 		create: function(){
 			game.add.sprite(0, 0, 'background');
