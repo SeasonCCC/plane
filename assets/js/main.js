@@ -49,17 +49,47 @@
 			// game.load.onFileComplete.add(function(){
 			// 	console.log(arguments);
 			// });
-		}, 
-		create: function(){
-			game.add.sprite(0, 0, 'background');
 		},
-		update: function() {
-			// body...
+		create: function(){
+			game.state.start('start');
+		}
+
+	}
+
+
+	game.states.start = {
+		create: function(){
+			game.add.image(0, 0, 'background');
+			var myplane = game.add.sprite(game.width/2 - 20, 100, 'myplane');
+			myplane.animations.add('fly');
+			myplane.animations.play('fly', 10, true);
+
+			game.add.button(game.width/2 - 50, 200, 'startbutton', this.onStart, this, 1, 1, 0, 1);
+		},
+		onStart: function() {
+			game.state.start('play');
+		}		
+	}
+
+
+	game.states.play = {
+		create: function(){
+			game.add.tileSprite(0, 0, game.width, game.height, 'background').autoScroll(0, 20);
+
+			var myplane = game.add.sprite(game.width/2 - 20, 100, 'myplane');
+			myplane.animations.add('fly');
+			myplane.animations.play('fly', 10, true);
+			game.add.tween(myplane).to({ y: game.height - 40}, 1000, null, true);
 		}
 	}
 
+
+
+
 	game.state.add('preload', game.states.preload);
 	game.state.add('load', game.states.load);
+	game.state.add('start', game.states.start);
+	game.state.add('play', game.states.play);
 	game.state.start('preload');
 
 })();
