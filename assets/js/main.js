@@ -60,15 +60,15 @@
 	game.states.start = {
 		create: function(){
 			game.add.image(0, 0, 'background');
-			var myplane = game.add.sprite(game.width/2 - 20, 100, 'myplane');
+			var myplane = game.add.sprite(game.world.centerX - 20, 100, 'myplane');
 			myplane.animations.add('fly');
 			myplane.animations.play('fly', 10, true);
 
-			game.add.button(game.width/2 - 50, 200, 'startbutton', this.onStart, this, 1, 1, 0, 1);
+			game.add.button(game.world.centerX - 50, 200, 'startbutton', this.onStart, this, 1, 1, 0, 1);
 		},
 		onStart: function() {
 			game.state.start('play');
-		}		
+		}
 	}
 
 
@@ -76,10 +76,17 @@
 		create: function(){
 			game.add.tileSprite(0, 0, game.width, game.height, 'background').autoScroll(0, 20);
 
-			var myplane = game.add.sprite(game.width/2 - 20, 100, 'myplane');
-			myplane.animations.add('fly');
-			myplane.animations.play('fly', 10, true);
-			game.add.tween(myplane).to({ y: game.height - 40}, 1000, null, true);
+			this.myplane = game.add.sprite(game.world.centerX - 20, 100, 'myplane');
+			this.myplane.animations.add('fly');
+			this.myplane.animations.play('fly', 10, true);
+			var tween = game.add.tween(this.myplane).to({ y: game.height - 40}, 1000, null, true);
+			tween.onComplete.add(this.onBegin, this);
+		},
+		onBegin: function(){
+			this.myplane.inputEnabled = true;
+			this.myplane.input.enableDrag();
+			var style = { font: "16px Arial", fill: "#ff0044"};
+			var text = game.add.text(0	, 0, "Score: 0", style);
 		}
 	}
 
