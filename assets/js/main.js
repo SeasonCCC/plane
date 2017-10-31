@@ -16,14 +16,14 @@
 		}
 	}
 
-
+	// 加载游戏资源
 	game.states.load = {
 		preload: function(){
 			var preloadSprite = game.add.sprite(10, game.height/2, 'loading');
 			game.load.setPreloadSprite(preloadSprite);
 			game.load.image('background', './assets/images/bg.jpg');
 			game.load.image('copyright', './assets/images/copyright.png');
-			game.load.spritesheet('myplane', './assets/images/myplane.png', 40, 40, 4);
+			game.load.spritesheet('myPlane', './assets/images/myPlane.png', 40, 40, 4);
 			game.load.spritesheet('startbutton', './assets/images/startbutton.png', 100, 40, 2);
 			game.load.spritesheet('replaybutton', './assets/images/replaybutton.png', 80, 30, 2);
 			game.load.spritesheet('sharebutton', './assets/images/sharebutton.png', 80, 30, 2);
@@ -56,13 +56,13 @@
 
 	}
 
-
+	// 游戏开始页面
 	game.states.start = {
 		create: function(){
 			game.add.image(0, 0, 'background');
-			var myplane = game.add.sprite(game.world.centerX - 20, 100, 'myplane');
-			myplane.animations.add('fly');
-			myplane.animations.play('fly', 10, true);
+			var myPlane = game.add.sprite(game.world.centerX - 20, 100, 'myPlane');
+			myPlane.animations.add('fly');
+			myPlane.animations.play('fly', 10, true);
 
 			game.add.button(game.world.centerX - 50, 200, 'startbutton', this.onStart, this, 1, 1, 0, 1);
 		},
@@ -71,23 +71,82 @@
 		}
 	}
 
-
+	// 战斗页面
 	game.states.play = {
 		create: function(){
+			// 开启游戏物理引擎
+			game.physics.startSystem(Phaser.Physics.ARCADE);
+
+			// 背景滚动
 			game.add.tileSprite(0, 0, game.width, game.height, 'background').autoScroll(0, 20);
 
-			this.myplane = game.add.sprite(game.world.centerX - 20, 100, 'myplane');
-			this.myplane.animations.add('fly');
-			this.myplane.animations.play('fly', 10, true);
-			var tween = game.add.tween(this.myplane).to({ y: game.height - 40}, 1000, null, true);
+			// 我方机体
+			this.myPlane = game.add.sprite(game.world.centerX - 20, 100, 'myPlane');
+			this.myPlane.animations.add('fly');
+			this.myPlane.animations.play('fly', 10, true);
+			game.physics.arcade.enable(this.myPlane);
+			this.myPlane.body.collideWorldBounds = true;
+
+			// 飞机飞到底部
+			var tween = game.add.tween(this.myPlane).to({ y: game.height - 40}, 1000, null, true);
 			tween.onComplete.add(this.onBegin, this);
 		},
+		update: function(){
+			this.myPlaneFire();
+			this.generateEnemy();
+			// 子弹和敌机发生碰撞
+			// game.physics.arcade.overlap(this.myBullets, this.enemy, this.collisionHandler, null, this);
+		},
 		onBegin: function(){
-			this.myplane.inputEnabled = true;
-			this.myplane.input.enableDrag();
+			// 飞机拖动
+			this.myPlane.inputEnabled = true;
+			this.myPlane.input.enableDrag();
+
+			// 子弹组合
+			this.myBullets = game.add.group();
+			// this.myBullets.createMultiple(5, 'mybullet');
+			// this.myBullets.enableBody = true;
+			// this.myBullets.setAll('outOfBoundsKill', true);
+			// this.myBullets.setAll('checkWorldBounds', true);
+
+			// 分数
 			var style = { font: "16px Arial", fill: "#ff0044"};
 			var text = game.add.text(0	, 0, "Score: 0", style);
+			this.lastBulletTime = 0;
+		},
+		collisionHandler: function(enemy, bullet){
+			enemy.kill();
+			bullet.kill();
+		},
+		myPlaneFire: function(){
+			var now = new Date().getTime();
+			// 发射子弹
+			if (now - this.lastBulletTime > 1000) {
+				var myBullet = this.myBullets.getFirstExists(false);
+				if (myBullet) {
+					myBullet.reset(this.myPlane.x, this.myPlane.y);				
+				}else{
+					myBullet = game.add.sprite(this.myPlane.x, this.myPlane.y, 'mybullet');
+					myBullet.outOfBoundsKill = true;
+					myBullet.checkWorldBounds = true;
+					this.myBullets.addChild(myBullet);
+					game.physics.enable(myBullet, Phaser.Physics.ARCADE);
+				}
+				myBullet.body.velocity.y = -200;
+				this.lastBulletTime = now;
+			}
+		},
+		generateEnemy: function(){
+			var rand = game.rnd.integerInRange(1, 3);
+			var key = 'enemy' + rand;
+			var size = game.cache.getImage(key).size;
+			// console.log(key);
+
+			// 敌机
+			// this.enemy = game.add.sprite(game.world.centerX, 0, 'enemy1');
+			// game.physics.arcade.enable(this.enemy);
 		}
+
 	}
 
 
