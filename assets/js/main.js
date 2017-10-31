@@ -92,10 +92,14 @@
 			tween.onComplete.add(this.onBegin, this);
 		},
 		update: function(){
-			this.myPlaneFire();
-			this.generateEnemy();
+			if (this.startPlay) {
+				this.myPlaneFire();
+				this.generateEnemy();
+				game.physics.arcade.overlap(this.myBullets, this.enemys, this.collisionHandler, null, this);
+			}
+
 			// 子弹和敌机发生碰撞
-			// game.physics.arcade.overlap(this.myBullets, this.enemy, this.collisionHandler, null, this);
+			
 		},
 		onBegin: function(){
 			// 飞机拖动
@@ -109,10 +113,20 @@
 			// this.myBullets.setAll('outOfBoundsKill', true);
 			// this.myBullets.setAll('checkWorldBounds', true);
 
+			// 敌机组合
+			this.enemys = game.add.group();
+			this.enemys.genTime = 0;
+
+			// 敌机子弹组合
+			this.enemysBullets = game.add.group();
+
 			// 分数
 			var style = { font: "16px Arial", fill: "#ff0044"};
 			var text = game.add.text(0	, 0, "Score: 0", style);
 			this.lastBulletTime = 0;
+
+			// 开启游戏
+			this.startPlay = true;
 		},
 		collisionHandler: function(enemy, bullet){
 			enemy.kill();
@@ -137,14 +151,36 @@
 			}
 		},
 		generateEnemy: function(){
-			var rand = game.rnd.integerInRange(1, 3);
-			var key = 'enemy' + rand;
-			var size = game.cache.getImage(key).size;
-			// console.log(key);
+			var now = new Date().getTime();
+			if (now - this.enemys.genTime > 1000) {
+				var rand = game.rnd.integerInRange(1, 3);
+				var key = 'enemy' + rand;
+				var size = game.cache.getImage(key).width;
 
+				var x = game.rnd.integerInRange(size/2, game.width - size/2);
+				var y = size/2;
+
+				var enemy = this.enemys.getFirstExists(false, true, x, y, key);
+				enemy.outOfBoundsKill = true;
+				enemy.checkWorldBounds = true;
+
+				enemy.anchor.setTo(0.5, 0.5);
+				game.physics.arcade.enable(enemy);
+				enemy.body.velocity.y = 100;
+				enemy.body.setSize(size, size);
+				this.enemys.genTime = now;
+			}
 			// 敌机
 			// this.enemy = game.add.sprite(game.world.centerX, 0, 'enemy1');
 			// game.physics.arcade.enable(this.enemy);
+		},
+		render: function(){
+			if (this.enemys) {
+				this.enemys.forEachAlive(function(enemy){
+					game.debug.body(enemy);
+				})
+				
+			}
 		}
 
 	}
