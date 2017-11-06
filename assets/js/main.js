@@ -95,6 +95,7 @@
 			if (this.startPlay) {
 				this.myPlaneFire();
 				this.generateEnemy();
+				this.enemyFire();
 				game.physics.arcade.overlap(this.myBullets, this.enemys, this.collisionHandler, null, this);
 			}
 
@@ -135,7 +136,7 @@
 		myPlaneFire: function(){
 			var now = new Date().getTime();
 			// 发射子弹
-			if (now - this.lastBulletTime > 1000) {
+			if (now - this.lastBulletTime > 500) {
 				var myBullet = this.myBullets.getFirstExists(false);
 				if (myBullet) {
 					myBullet.reset(this.myPlane.x, this.myPlane.y);				
@@ -168,20 +169,37 @@
 				game.physics.arcade.enable(enemy);
 				enemy.body.velocity.y = 100;
 				enemy.body.setSize(size, size);
+				enemy.lastFireTime = 0;
+
 				this.enemys.genTime = now;
 			}
 			// 敌机
 			// this.enemy = game.add.sprite(game.world.centerX, 0, 'enemy1');
 			// game.physics.arcade.enable(this.enemy);
 		},
-		render: function(){
-			if (this.enemys) {
-				this.enemys.forEachAlive(function(enemy){
-					game.debug.body(enemy);
-				})
+		enemyFire: function(){
+			var now = new Date().getTime();
+			this.enemys.forEachAlive(function(enemy){
+				if (now - enemy.lastFireTime > 1000) {
+					var bullet = this.enemysBullets.getFirstExists(false, true, enemy.x, enemy.y, 'bullet');
+					bullet.outOfBoundsKill = true;
+					bullet.checkWorldBounds = true;		
+					bullet.anchor.setTo(0.5, 0.5);
+					game.physics.arcade.enable(bullet);
+					bullet.body.velocity.y = 200;
+
+					enemy.lastFireTime = now;
+				}	
+			}, this);
+		},
+		// render: function(){
+		// 	if (this.enemys) {
+		// 		this.enemys.forEachAlive(function(enemy){
+		// 			game.debug.body(enemy);
+		// 		})
 				
-			}
-		}
+		// 	}
+		// }
 
 	}
 
