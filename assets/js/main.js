@@ -98,6 +98,7 @@
 				this.enemyFire();
 				game.physics.arcade.overlap(this.myBullets, this.enemys, this.hitEnemy, null, this);
 				game.physics.arcade.overlap(this.enemysBullets, this.myPlane, this.hitPlane, null, this);
+				console.log(this.enemysAnimation.length);
 			}
 
 			// 子弹和敌机发生碰撞
@@ -110,10 +111,6 @@
 
 			// 子弹组合
 			this.myBullets = game.add.group();
-			// this.myBullets.createMultiple(5, 'mybullet');
-			// this.myBullets.enableBody = true;
-			// this.myBullets.setAll('outOfBoundsKill', true);
-			// this.myBullets.setAll('checkWorldBounds', true);
 
 			// 敌机组合
 			this.enemys = game.add.group();
@@ -121,6 +118,9 @@
 
 			// 敌机子弹组合
 			this.enemysBullets = game.add.group();
+
+			// 敌机破坏动画组合
+			this.enemysAnimation = game.add.group();
 
 			// 分数
 			var style = { font: "16px Arial", fill: "#ff0044"};
@@ -136,7 +136,7 @@
 			if (now - this.lastBulletTime > 500) {
 				var myBullet = this.myBullets.getFirstExists(false);
 				if (myBullet) {
-					myBullet.reset(this.myPlane.x, this.myPlane.y);				
+					myBullet.reset(this.myPlane.x, this.myPlane.y);	
 				}else{
 					myBullet = game.add.sprite(this.myPlane.x, this.myPlane.y, 'mybullet');
 					myBullet.outOfBoundsKill = true;
@@ -196,14 +196,15 @@
 					bullet.body.velocity.y = 200;
 					
 					enemy.lastFireTime = now;
-				}	
+				}
 			}, this);
 		},
 		hitEnemy: function(bullet, enemy){
 			bullet.kill();
 			if (enemy.life <= 0) {
 				enemy.kill();
-				var explode = game.add.sprite(enemy.x, enemy.y, enemy.explode);
+				var explode = this.enemysAnimation.getFirstExists(false, true, enemy.x, enemy.y, enemy.explode);
+				// var explode = game.add.sprite(enemy.x, enemy.y, enemy.explode);
 				explode.anchor.setTo(0.5, 0.5);
 				var anim = explode.animations.add('animation');
 				anim.play(20, false, false);
@@ -211,7 +212,6 @@
 				anim.onComplete.addOnce(function(){
 					explode.destroy();
 				});
-
 			} else {
 				enemy.life--;
 			}	
