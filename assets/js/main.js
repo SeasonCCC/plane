@@ -96,7 +96,8 @@
 				this.myPlaneFire();
 				this.generateEnemy();
 				this.enemyFire();
-				game.physics.arcade.overlap(this.myBullets, this.enemys, this.collisionHandler, null, this);
+				game.physics.arcade.overlap(this.myBullets, this.enemys, this.hitEnemy, null, this);
+				game.physics.arcade.overlap(this.enemysBullets, this.myPlane, this.hitPlane, null, this);
 			}
 
 			// 子弹和敌机发生碰撞
@@ -128,10 +129,6 @@
 
 			// 开启游戏
 			this.startPlay = true;
-		},
-		collisionHandler: function(enemy, bullet){
-			enemy.kill();
-			bullet.kill();
 		},
 		myPlaneFire: function(){
 			var now = new Date().getTime();
@@ -170,6 +167,16 @@
 				enemy.body.velocity.y = 100;
 				enemy.body.setSize(size, size);
 				enemy.lastFireTime = 0;
+				enemy.size = size;
+				enemy.explode = 'explode' + rand;
+
+				if (rand == 1) {
+					enemy.life = 1;
+				} else if(rand == 2) {
+					enemy.life = 2;
+				}else{
+					enemy.life = 3;
+				}
 
 				this.enemys.genTime = now;
 			}
@@ -181,16 +188,37 @@
 			var now = new Date().getTime();
 			this.enemys.forEachAlive(function(enemy){
 				if (now - enemy.lastFireTime > 1000) {
-					var bullet = this.enemysBullets.getFirstExists(false, true, enemy.x, enemy.y, 'bullet');
+					var bullet = this.enemysBullets.getFirstExists(false, true, enemy.x, enemy.y + enemy.size/2, 'bullet');
 					bullet.outOfBoundsKill = true;
 					bullet.checkWorldBounds = true;		
 					bullet.anchor.setTo(0.5, 0.5);
 					game.physics.arcade.enable(bullet);
 					bullet.body.velocity.y = 200;
-
+					
 					enemy.lastFireTime = now;
 				}	
 			}, this);
+		},
+		hitEnemy: function(bullet, enemy){
+			bullet.kill();
+			if (enemy.life <= 0) {
+				enemy.kill();
+				var explode = game.add.sprite(enemy.x, enemy.y, enemy.explode);
+				explode.anchor.setTo(0.5, 0.5);
+				var anim = explode.animations.add('animation');
+				anim.play(20, false, false);
+
+				anim.onComplete.addOnce(function(){
+					explode.destroy();
+				});
+
+			} else {
+				enemy.life--;
+			}	
+		},
+		hitPlane: function(bullet, plane){
+			bullet.kill();
+			plane.kill();
 		},
 		// render: function(){
 		// 	if (this.enemys) {
