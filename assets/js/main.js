@@ -1,5 +1,6 @@
 ;(function(){
 	var game = new Phaser.Game(240, 400, Phaser.AUTO, 'game');
+	var score = 0;
 
 	game.states = {};
 
@@ -98,7 +99,7 @@
 				this.enemyFire();
 				game.physics.arcade.overlap(this.myBullets, this.enemys, this.hitEnemy, null, this);
 				game.physics.arcade.overlap(this.enemysBullets, this.myPlane, this.hitPlane, null, this);
-				console.log(this.enemysAnimation.length);
+				// console.log(this.enemysAnimation.length);
 			}
 
 			// 子弹和敌机发生碰撞
@@ -124,16 +125,17 @@
 
 			// 分数
 			var style = { font: "16px Arial", fill: "#ff0044"};
-			var text = game.add.text(0	, 0, "Score: 0", style);
+			this.text = game.add.text(0, 0, "Score: "+score, style);
 			this.lastBulletTime = 0;
 
 			// 开启游戏
 			this.startPlay = true;
+			this.allowFire = true;
 		},
 		myPlaneFire: function(){
 			var now = new Date().getTime();
 			// 发射子弹
-			if (now - this.lastBulletTime > 500) {
+			if (now - this.lastBulletTime > 500 && this.allowFire) {
 				var myBullet = this.myBullets.getFirstExists(false);
 				if (myBullet) {
 					myBullet.reset(this.myPlane.x, this.myPlane.y);	
@@ -202,42 +204,48 @@
 		hitEnemy: function(bullet, enemy){
 			bullet.kill();
 			if (enemy.life <= 0) {
+				score += 10;
+				this.text.setText("Score：" + score);
 				enemy.kill();
 				var explode = this.enemysAnimation.getFirstExists(false, true, enemy.x, enemy.y, enemy.explode);
 				// var explode = game.add.sprite(enemy.x, enemy.y, enemy.explode);
 				explode.anchor.setTo(0.5, 0.5);
 				var anim = explode.animations.add('animation');
-				anim.play(20, false, false);
-
-				anim.onComplete.addOnce(function(){
-					explode.destroy();
-				});
+				anim.play(20, false, true);
 			} else {
 				enemy.life--;
-			}	
+			}
 		},
 		hitPlane: function(bullet, plane){
 			bullet.kill();
 			plane.kill();
+			this.allowFire = false;
+			game.state.start('end');
 		},
-		// render: function(){
-		// 	if (this.enemys) {
-		// 		this.enemys.forEachAlive(function(enemy){
-		// 			game.debug.body(enemy);
-		// 		})
-				
-		// 	}
-		// }
-
 	}
 
 
+	// 游戏结束页面
+	game.states.end = {
+		create: function(){
+			game.add.image(0, 0, 'background');
+			var myPlane = game.add.sprite(game.world.centerX - 20, 100, 'myPlane');
+			myPlane.animations.add('fly');
+			myPlane.animations.play('fly', 10, true);
+			var style = { font: "30px Arial", fill: "#ff0044", align: "center"};
+			var text = game.add.text(game.world.centerX, game.world.centerY, "Score: " + score, style);
+			text.anchor.set(0.5);
+			// text.setTextBounds(0, 0, game.world.width, game.world.height);
+			// game.add.button(game.world.centerX - 50, 200, 'startbutton', this.onStart, this, 1, 1, 0, 1);
+		}
+	}
 
 
 	game.state.add('preload', game.states.preload);
 	game.state.add('load', game.states.load);
 	game.state.add('start', game.states.start);
 	game.state.add('play', game.states.play);
+	game.state.add('end', game.states.end);
 	game.state.start('preload');
 
 })();
