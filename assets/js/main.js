@@ -98,7 +98,7 @@
 				this.generateEnemy();
 				this.enemyFire();
 				game.physics.arcade.overlap(this.myBullets, this.enemys, this.hitEnemy, null, this);
-				game.physics.arcade.overlap(this.enemysBullets, this.myPlane, this.hitPlane, null, this);
+				game.physics.arcade.overlap(this.myPlane, this.enemysBullets, this.hitPlane, null, this);
 				// console.log(this.enemysAnimation.length);
 			}
 
@@ -109,6 +109,7 @@
 			// 飞机拖动
 			this.myPlane.inputEnabled = true;
 			this.myPlane.input.enableDrag();
+			this.myPlane.life = 3;
 
 			// 子弹组合
 			this.myBullets = game.add.group();
@@ -133,20 +134,39 @@
 			this.allowFire = true;
 		},
 		myPlaneFire: function(){
+			var getMyPlaneBullets = function(){
+				var mybullet = this.myBullets.getFirstExists(false, true, this.myPlane.x + 15, this.myPlane.y - 15 , 'mybullet');
+				mybullet.outOfBoundsKill = true;
+				mybullet.checkWorldBounds = true;
+				game.physics.enable(mybullet, Phaser.Physics.ARCADE);
+				return mybullet;
+			}
+
+
 			var now = new Date().getTime();
 			// 发射子弹
 			if (now - this.lastBulletTime > 500 && this.allowFire) {
-				var myBullet = this.myBullets.getFirstExists(false);
-				if (myBullet) {
-					myBullet.reset(this.myPlane.x, this.myPlane.y);	
-				}else{
-					myBullet = game.add.sprite(this.myPlane.x, this.myPlane.y, 'mybullet');
-					myBullet.outOfBoundsKill = true;
-					myBullet.checkWorldBounds = true;
-					this.myBullets.addChild(myBullet);
-					game.physics.enable(myBullet, Phaser.Physics.ARCADE);
-				}
+				var myBullet = getMyPlaneBullets.call(this);
 				myBullet.body.velocity.y = -200;
+				if (this.myPlane.life >= 2) {
+					myBullet = getMyPlaneBullets.call(this);
+					myBullet.body.velocity.x = 40;
+					myBullet.body.velocity.y = -200;	
+
+					myBullet = getMyPlaneBullets.call(this);
+					myBullet.body.velocity.x = -40;	
+					myBullet.body.velocity.y = -200;
+
+					myBullet = getMyPlaneBullets.call(this);
+					myBullet.body.velocity.x = -80;	
+					myBullet.body.velocity.y = -200;
+
+
+					myBullet = getMyPlaneBullets.call(this);
+					myBullet.body.velocity.x = 80;	
+					myBullet.body.velocity.y = -200;
+				}
+
 				this.lastBulletTime = now;
 			}
 		},
@@ -202,6 +222,7 @@
 			}, this);
 		},
 		hitEnemy: function(bullet, enemy){
+			// console.log(bullet);
 			bullet.kill();
 			if (enemy.life <= 0) {
 				score += 10;
@@ -216,11 +237,15 @@
 				enemy.life--;
 			}
 		},
-		hitPlane: function(bullet, plane){
+		hitPlane: function(plane, bullet){
+			// console.log(bullet);
 			bullet.kill();
-			plane.kill();
-			this.allowFire = false;
-			game.state.start('end');
+			plane.life--;
+			if (plane.life <= 0) {
+				plane.kill();
+				this.allowFire = false;
+				game.state.start('end');
+			}
 		},
 	}
 
