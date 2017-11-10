@@ -65,9 +65,13 @@
 			myPlane.animations.add('fly');
 			myPlane.animations.play('fly', 10, true);
 
+			this.normalback = game.add.audio('normalback', 0.1, false);
+			this.normalback.play();
+
 			game.add.button(game.world.centerX - 50, 200, 'startbutton', this.onStart, this, 1, 1, 0, 1);
 		},
 		onStart: function() {
+			this.normalback.stop();
 			game.state.start('play');
 		}
 	}
@@ -97,8 +101,10 @@
 				this.myPlaneFire();
 				this.generateEnemy();
 				this.enemyFire();
+
 				game.physics.arcade.overlap(this.myBullets, this.enemys, this.hitEnemy, null, this);
 				game.physics.arcade.overlap(this.myPlane, this.enemysBullets, this.hitPlane, null, this);
+				game.physics.arcade.overlap(this.myPlane, this.award, this.getAward, null, this);
 				// console.log(this.enemysAnimation.length);
 			}
 
@@ -106,6 +112,15 @@
 			
 		},
 		onBegin: function(){
+			this.playback = game.add.audio('playback', 0.01, false);
+			this.fashe = game.add.audio('fashe', 0.1, false);
+			this.crash1 = game.add.audio('crash1', 0.2, false);
+			this.crash2 = game.add.audio('crash2', 0.2, false);
+			this.crash3 = game.add.audio('crash3', 0.2, false);
+
+			this.playback.play();
+			this.fashe.play();
+
 			// 飞机拖动
 			this.myPlane.inputEnabled = true;
 			this.myPlane.input.enableDrag();
@@ -124,6 +139,10 @@
 			// 敌机破坏动画组合
 			this.enemysAnimation = game.add.group();
 
+			// 奖励组合
+			this.award = game.add.group();
+			this.award.genTime = 0;
+
 			// 分数
 			var style = { font: "16px Arial", fill: "#ff0044"};
 			this.text = game.add.text(0, 0, "Score: "+score, style);
@@ -132,6 +151,7 @@
 			// 开启游戏
 			this.startPlay = true;
 			this.allowFire = true;
+			game.time.events.loop(5000, this.generateAward, this);
 		},
 		myPlaneFire: function(){
 			var getMyPlaneBullets = function(){
@@ -148,7 +168,8 @@
 			if (now - this.lastBulletTime > 500 && this.allowFire) {
 				var myBullet = getMyPlaneBullets.call(this);
 				myBullet.body.velocity.y = -200;
-				if (this.myPlane.life >= 2) {
+
+				if (this.myPlane.life >= 3) {
 					myBullet = getMyPlaneBullets.call(this);
 					myBullet.body.velocity.x = 40;
 					myBullet.body.velocity.y = -200;	
@@ -161,10 +182,17 @@
 					myBullet.body.velocity.x = -80;	
 					myBullet.body.velocity.y = -200;
 
+					myBullet = getMyPlaneBullets.call(this);
+					myBullet.body.velocity.x = 80;
+					myBullet.body.velocity.y = -200;
+				}else if(this.myPlane.life == 2){
+					myBullet = getMyPlaneBullets.call(this);
+					myBullet.body.velocity.x = 40;
+					myBullet.body.velocity.y = -200;	
 
 					myBullet = getMyPlaneBullets.call(this);
-					myBullet.body.velocity.x = 80;	
-					myBullet.body.velocity.y = -200;
+					myBullet.body.velocity.x = -40;	
+					myBullet.body.velocity.y = -200;					
 				}
 
 				this.lastBulletTime = now;
@@ -191,6 +219,7 @@
 				enemy.lastFireTime = 0;
 				enemy.size = size;
 				enemy.explode = 'explode' + rand;
+				enemy.index = rand;
 
 				if (rand == 1) {
 					enemy.life = 1;
@@ -202,9 +231,6 @@
 
 				this.enemys.genTime = now;
 			}
-			// 敌机
-			// this.enemy = game.add.sprite(game.world.centerX, 0, 'enemy1');
-			// game.physics.arcade.enable(this.enemy);
 		},
 		enemyFire: function(){
 			var now = new Date().getTime();
@@ -221,18 +247,31 @@
 				}
 			}, this);
 		},
+		generateAward: function(){
+			var awardSize = game.cache.getImage('award');
+			var x = game.rnd.integerInRange(0, game.world.width - awardSize.width);
+			var award = this.award.getFirstExists(false, true, x, 0, 'award');
+			award.outOfBoundsKill = true;
+			award.checkWorldBounds = true;	
+			game.physics.arcade.enable(award);
+			award.body.velocity.y = 400;
+		},
+
+		/* 碰撞 */ 
 		hitEnemy: function(bullet, enemy){
 			// console.log(bullet);
 			bullet.kill();
 			if (enemy.life <= 0) {
 				score += 10;
-				this.text.setText("Score：" + score);
+				this.text.setText('Score：' + score);
 				enemy.kill();
 				var explode = this.enemysAnimation.getFirstExists(false, true, enemy.x, enemy.y, enemy.explode);
 				// var explode = game.add.sprite(enemy.x, enemy.y, enemy.explode);
 				explode.anchor.setTo(0.5, 0.5);
 				var anim = explode.animations.add('animation');
 				anim.play(20, false, true);
+				console.log(enemy.index);
+				this['crash' + enemy.index].play();
 			} else {
 				enemy.life--;
 			}
@@ -247,6 +286,10 @@
 				game.state.start('end');
 			}
 		},
+		getAward: function(plane, award){
+			award.kill();
+			plane.life++;
+		}
 	}
 
 
