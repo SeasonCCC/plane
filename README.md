@@ -1,2 +1,2 @@
 # plane wars
-## Simple javascript game using phaser
+#### Simple javascript game using phaser
