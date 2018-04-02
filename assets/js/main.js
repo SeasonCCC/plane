@@ -24,7 +24,7 @@
 			game.load.setPreloadSprite(preloadSprite);
 			game.load.image('background', './assets/images/bg.jpg');
 			game.load.image('copyright', './assets/images/copyright.png');
-			game.load.spritesheet('myPlane', './assets/images/myPlane.png', 40, 40, 4);
+			game.load.spritesheet('myPlane', './assets/images/myplane.png', 40, 40, 4);
 			game.load.spritesheet('startbutton', './assets/images/startbutton.png', 100, 40, 2);
 			game.load.spritesheet('replaybutton', './assets/images/replaybutton.png', 80, 30, 2);
 			game.load.spritesheet('sharebutton', './assets/images/sharebutton.png', 80, 30, 2);
