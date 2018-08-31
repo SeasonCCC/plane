@@ -1,5 +1,6 @@
 ;(function(){
-	var game = new Phaser.Game(240, 400, Phaser.AUTO, 'game');
+	var game = new Phaser.Game(document.body.clientWidth, document.body.clientHeight, Phaser.AUTO, 'game');
+	console.log(document.body.clientWidth, document.body.clientHeight)
 	var score = 0;
 
 	game.states = {};
@@ -7,11 +8,12 @@
 	game.states.preload = {
 		preload: function(){
 			game.load.image('loading', './assets/images/preloader.gif');
-			if (!game.device.desktop) {
-				game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
-			}
+			// game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
 
-		}, 
+			// if (!game.device.desktop) {
+			// 	game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
+			// }
+		},
 		create: function(){
 			game.state.start('load');
 		}
@@ -24,7 +26,7 @@
 			game.load.setPreloadSprite(preloadSprite);
 			game.load.image('background', './assets/images/bg.jpg');
 			game.load.image('copyright', './assets/images/copyright.png');
-			game.load.spritesheet('myPlane', './assets/images/myPlane.png', 40, 40, 4);
+			game.load.spritesheet('myPlane', './assets/images/myplane.png', 40, 40, 4);
 			game.load.spritesheet('startbutton', './assets/images/startbutton.png', 100, 40, 2);
 			game.load.spritesheet('replaybutton', './assets/images/replaybutton.png', 80, 30, 2);
 			game.load.spritesheet('sharebutton', './assets/images/sharebutton.png', 80, 30, 2);
@@ -46,7 +48,7 @@
 			game.load.audio('crash3', './assets/images/crash3.mp3');
 			game.load.audio('ao', './assets/images/ao.mp3');
 			game.load.audio('pi', './assets/images/pi.mp3');
-			game.load.audio('deng', './assets/images/deng.mp3');	
+			game.load.audio('deng', './assets/images/deng.mp3');
 			// game.load.onFileComplete.add(function(){
 			// 	console.log(arguments);
 			// });
@@ -60,7 +62,7 @@
 	// 游戏开始页面
 	game.states.start = {
 		create: function(){
-			game.add.image(0, 0, 'background');
+			game.add.tileSprite(0, 0, game.width, game.height, 'background')
 			var myPlane = game.add.sprite(game.world.centerX - 20, 100, 'myPlane');
 			myPlane.animations.add('fly');
 			myPlane.animations.play('fly', 10, true);
@@ -109,7 +111,7 @@
 			}
 
 			// 子弹和敌机发生碰撞
-			
+
 		},
 		onBegin: function(){
 			this.playback = game.add.audio('playback', 0.01, false);
@@ -172,14 +174,14 @@
 				if (this.myPlane.life >= 3) {
 					myBullet = getMyPlaneBullets.call(this);
 					myBullet.body.velocity.x = 40;
-					myBullet.body.velocity.y = -200;	
-
-					myBullet = getMyPlaneBullets.call(this);
-					myBullet.body.velocity.x = -40;	
 					myBullet.body.velocity.y = -200;
 
 					myBullet = getMyPlaneBullets.call(this);
-					myBullet.body.velocity.x = -80;	
+					myBullet.body.velocity.x = -40;
+					myBullet.body.velocity.y = -200;
+
+					myBullet = getMyPlaneBullets.call(this);
+					myBullet.body.velocity.x = -80;
 					myBullet.body.velocity.y = -200;
 
 					myBullet = getMyPlaneBullets.call(this);
@@ -188,11 +190,11 @@
 				}else if(this.myPlane.life == 2){
 					myBullet = getMyPlaneBullets.call(this);
 					myBullet.body.velocity.x = 40;
-					myBullet.body.velocity.y = -200;	
+					myBullet.body.velocity.y = -200;
 
 					myBullet = getMyPlaneBullets.call(this);
-					myBullet.body.velocity.x = -40;	
-					myBullet.body.velocity.y = -200;					
+					myBullet.body.velocity.x = -40;
+					myBullet.body.velocity.y = -200;
 				}
 
 				this.lastBulletTime = now;
@@ -238,11 +240,11 @@
 				if (now - enemy.lastFireTime > 1000) {
 					var bullet = this.enemysBullets.getFirstExists(false, true, enemy.x, enemy.y + enemy.size/2, 'bullet');
 					bullet.outOfBoundsKill = true;
-					bullet.checkWorldBounds = true;		
+					bullet.checkWorldBounds = true;
 					bullet.anchor.setTo(0.5, 0.5);
 					game.physics.arcade.enable(bullet);
 					bullet.body.velocity.y = 200;
-					
+
 					enemy.lastFireTime = now;
 				}
 			}, this);
@@ -252,12 +254,12 @@
 			var x = game.rnd.integerInRange(0, game.world.width - awardSize.width);
 			var award = this.award.getFirstExists(false, true, x, 0, 'award');
 			award.outOfBoundsKill = true;
-			award.checkWorldBounds = true;	
+			award.checkWorldBounds = true;
 			game.physics.arcade.enable(award);
 			award.body.velocity.y = 400;
 		},
 
-		/* 碰撞 */ 
+		/* 碰撞 */
 		hitEnemy: function(bullet, enemy){
 			// console.log(bullet);
 			bullet.kill();
@@ -317,4 +319,3 @@
 	game.state.start('preload');
 
 })();
-
